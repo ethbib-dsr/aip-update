@@ -1,0 +1,6 @@
+**/*.jar
+bin/
+log/
+conf/config.test.properties
+conf/find-updates.test.sql
+.settings

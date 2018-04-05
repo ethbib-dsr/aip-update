@@ -1,0 +1,15 @@
+activation.jar
+axis.jar
+commons-discovery-0.2.jar
+commons-lang3-3.5.jar
+jars.txt
+javax.mail.jar
+javax.wsdl_1.6.2.v201012040545.jar
+jaxrpc.jar
+jsch-0.1.54.jar
+jzlib-1.1.3.jar
+log4j-api-2.5.jar
+log4j-core-2.5.jar
+ojdbc6.jar
+org.apache.commons.logging_1.1.1.v201101211721.jar
+saaj.jar
