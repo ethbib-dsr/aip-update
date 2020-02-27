@@ -1,4 +1,4 @@
-package com.ethz.aipupdate.helper;
+package com.ethz.submissionds.helper;
 
 import java.io.File;
 import java.io.IOException;

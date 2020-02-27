@@ -1,4 +1,4 @@
-package com.ethz.aipupdate.businesslogic;
+package com.ethz.submissionds.businesslogic;
 
 import java.io.File;
 import java.io.IOException;
@@ -20,17 +20,17 @@ import org.apache.axis.AxisFault;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.ethz.aipupdate.beans.StreamBean;
-import com.ethz.aipupdate.db.DaoOracle;
-import com.ethz.aipupdate.db.QueueDaoOracle;
-import com.ethz.aipupdate.db.TrackingDaoOracle;
-import com.ethz.aipupdate.helper.AipUpdater;
-import com.ethz.aipupdate.helper.ConfigProperties;
-import com.ethz.aipupdate.helper.DataHelper;
-import com.ethz.aipupdate.helper.FileOperations;
-import com.ethz.aipupdate.helper.MetsParser;
-import com.ethz.aipupdate.helper.PdsConnector;
-import com.ethz.aipupdate.helper.SftpHelper;
+import com.ethz.submissionds.beans.StreamBean;
+import com.ethz.submissionds.db.DaoOracle;
+import com.ethz.submissionds.db.QueueDaoOracle;
+import com.ethz.submissionds.db.TrackingDaoOracle;
+import com.ethz.submissionds.helper.AipUpdater;
+import com.ethz.submissionds.helper.ConfigProperties;
+import com.ethz.submissionds.helper.DataHelper;
+import com.ethz.submissionds.helper.FileOperations;
+import com.ethz.submissionds.helper.MetsParser;
+import com.ethz.submissionds.helper.PdsConnector;
+import com.ethz.submissionds.helper.SftpHelper;
 import com.exlibris.dps.IEWebServicesProxy;
 import com.exlibris.dps.IEWebServices_PortType;
 import com.exlibris.dps.IEWebServices_ServiceLocator;
@@ -168,13 +168,15 @@ public class AipUpdateDomain
 				//extract RIP ID
 				ripId = aipUpdater.runFileUpdates(filesForAip, iePid, repPid);
 				logger.debug("RIPID: " + ripId);
-				
+								
 				//flag record in DB with waiting aip update because updates will be done asynchronous
 				queueDao.updateStatus(config.getQueueStatusWaitIe(), dbRow.get(DaoOracle.AMD_ID));
 				
 				//add rip id to stream
 				queueDao.updateSipId(String.valueOf(ripId), dbRow.get(DaoOracle.AMD_ID));
-
+				
+				//waiting time after each update
+				DataHelper.applicationSleep(config.getControlUpdateWaiting());
 			}
 		}
 	}

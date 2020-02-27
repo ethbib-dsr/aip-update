@@ -1,4 +1,4 @@
-package com.ethz.aipupdate.businesslogic;
+package com.ethz.submissionds.businesslogic;
 
 import java.io.File;
 import java.util.List;
@@ -7,12 +7,12 @@ import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.ethz.aipupdate.db.DaoOracle;
-import com.ethz.aipupdate.db.QueueDaoOracle;
-import com.ethz.aipupdate.helper.ConfigProperties;
-import com.ethz.aipupdate.helper.DataHelper;
-import com.ethz.aipupdate.helper.FileOperations;
-import com.ethz.aipupdate.helper.SftpHelper;
+import com.ethz.submissionds.db.DaoOracle;
+import com.ethz.submissionds.db.QueueDaoOracle;
+import com.ethz.submissionds.helper.ConfigProperties;
+import com.ethz.submissionds.helper.DataHelper;
+import com.ethz.submissionds.helper.FileOperations;
+import com.ethz.submissionds.helper.SftpHelper;
 
 /**
  * Business domain object 

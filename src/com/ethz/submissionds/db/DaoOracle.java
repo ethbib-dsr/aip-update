@@ -1,4 +1,4 @@
-package com.ethz.aipupdate.db;
+package com.ethz.submissionds.db;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -7,7 +7,7 @@ import java.sql.SQLException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.ethz.aipupdate.helper.ConfigProperties;
+import com.ethz.submissionds.helper.ConfigProperties;
 
 /**
  * Data Access Object superclass for Oracle connectivity

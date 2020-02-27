@@ -4,13 +4,13 @@
     <Console name="Console">
       <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
     </Console>
-    <File name="Logfile" fileName="log/aip-update.log">
+    <File name="Logfile" fileName="log/submissionDs.log">
       <PatternLayout pattern="%d %p %c{1.} [%t] %m%n"/>
     </File>
   </Appenders>
   <Loggers>
-    <Root level="error">
-     	<AppenderRef ref="Logfile" level="error" />
+    <Root level="info">
+     	<AppenderRef ref="Logfile" level="info" />
     </Root>
     <Logger name="com" level="debug">
        <AppenderRef ref="Console" level="debug" />

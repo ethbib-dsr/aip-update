@@ -1,10 +1,11 @@
-package com.ethz.aipupdate.helper;
+package com.ethz.submissionds.helper;
 
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -12,8 +13,8 @@ import javax.xml.rpc.ServiceException;
 
 import org.apache.commons.lang3.StringEscapeUtils;
 
-import com.ethz.aipupdate.beans.DcMetaDataBean;
-import com.ethz.aipupdate.db.DaoOracle;
+import com.ethz.submissionds.beans.DcMetaDataBean;
+import com.ethz.submissionds.db.DaoOracle;
 import com.exlibris.dps.IEWebServices_PortType;
 import com.exlibris.dps.IEWebServices_ServiceLocator;
 import com.jcraft.jsch.Logger;
@@ -218,5 +219,22 @@ public class DataHelper
 		return dbRow;
 	}		
 	
+
+	/**
+	 * Stop current process in application for supplied seconds
+	 * 
+	 * @param sleepTimeSeconds
+	 */
+	public static void applicationSleep(int sleepTimeSeconds)
+	{
+		try
+		{
+			TimeUnit.SECONDS.sleep(sleepTimeSeconds);
+		}
+		catch (InterruptedException e)
+		{
+			System.out.println("sleep error: " + e.getMessage());
+		}
+	}
 	
 }

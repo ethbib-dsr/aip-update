@@ -1,4 +1,4 @@
-package com.ethz.aipupdate.businesslogic;
+package com.ethz.submissionds.businesslogic;
 
 import java.util.List;
 import java.util.Map;
@@ -6,12 +6,12 @@ import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.ethz.aipupdate.db.DaoOracle;
-import com.ethz.aipupdate.db.QueueDaoOracle;
-import com.ethz.aipupdate.db.TrackingDaoOracle;
-import com.ethz.aipupdate.helper.ConfigProperties;
-import com.ethz.aipupdate.helper.DataHelper;
-import com.ethz.aipupdate.helper.SftpHelper;
+import com.ethz.submissionds.db.DaoOracle;
+import com.ethz.submissionds.db.QueueDaoOracle;
+import com.ethz.submissionds.db.TrackingDaoOracle;
+import com.ethz.submissionds.helper.ConfigProperties;
+import com.ethz.submissionds.helper.DataHelper;
+import com.ethz.submissionds.helper.SftpHelper;
 
 /**
  * Business domain object 
@@ -76,35 +76,45 @@ public class IngestDomain
 	 */
 	private void processCurrentQueue(List<Map<String, String>> queue)
 	{
+		List<String> uniqueConstraints = queueDao.getUniqueConstraintIDs();
+				
 		for(Map<String, String> dbRow : queue)
 		{
 			logger.info("item: " + dbRow.get(DaoOracle.WORKFLOW_EXECUTION_ID) + " (" + dbRow.get(DaoOracle.AMD_ID) + ")");
 			
-			//update data for insert
-			dbRow = updateDataForInsert(dbRow);
-			logger.debug("Queue entry data updated");
+			// to process, the 
+			if ((dbRow.get(DaoOracle.SIP_STATUS).equals(config.getQueueStatusNew())) && 
+				(uniqueConstraints.indexOf(dbRow.get(DaoOracle.WORKFLOW_EXECUTION_ID)) > -1)) {				
+				logger.error("Queue status: " + config.getQueueStatusUniqueConstraintError()+
+				             ". Item AMD="+dbRow.get(DaoOracle.AMD_ID));				
+			} else {
+				//update data for insert
+				dbRow = updateDataForInsert(dbRow);
+				logger.debug("Queue entry data updated");
+				
+				//add row to tracking table
+				trackingDao.insertTrackingEntry(dbRow);
+				logger.info("Added to tracking table");
+	
+				//set FILE_COPY_STARTED in queue table
+				queueDao.updateStatus(config.getQueueStatusStartedcopy(), dbRow.get(DaoOracle.AMD_ID));
+				logger.debug("Queue status: " + config.getQueueStatusStartedcopy()); 
+	
+				//physical copy from sftp to local storage
+				logger.info("cp " + dbRow.get(DaoOracle.SFTP_SOURCE) + " " + config.getStorageIngest() + ")");
+				SftpHelper sftp = new SftpHelper(config);
+				sftp.copy(dbRow.get(DaoOracle.SFTP_SOURCE), config.getStorageIngest());
+				sftp.closeSftpChannel();
+	
+				//set tracking table entry to FEEDER_SUBMITTED
+				trackingDao.updateStatus(config.getTrackingStatusFinished(), dbRow.get(DaoOracle.AMD_ID));
+				logger.info("Tracking status: " + config.getTrackingStatusFinished());			
+	
+				//set queue table to status FEEDER_PREINGESTED
+				queueDao.updateStatus(config.getQueueStatusPreingested(), dbRow.get(DaoOracle.AMD_ID));
+				logger.info("Queue status: " + config.getQueueStatusPreingested());
+			}
 			
-			//add row to tracking table
-			trackingDao.insertTrackingEntry(dbRow);
-			logger.info("Added to tracking table");
-
-			//set FILE_COPY_STARTED in queue table
-			queueDao.updateStatus(config.getQueueStatusStartedcopy(), dbRow.get(DaoOracle.AMD_ID));
-			logger.debug("Queue status: " + config.getQueueStatusStartedcopy()); 
-
-			//physical copy from sftp to local storage
-			logger.info("cp " + dbRow.get(DaoOracle.SFTP_SOURCE) + " " + config.getStorageIngest() + ")");
-			SftpHelper sftp = new SftpHelper(config);
-			sftp.copy(dbRow.get(DaoOracle.SFTP_SOURCE), config.getStorageIngest());
-			sftp.closeSftpChannel();
-
-			//set tracking table entry to FEEDER_SUBMITTED
-			trackingDao.updateStatus(config.getTrackingStatusFinished(), dbRow.get(DaoOracle.AMD_ID));
-			logger.info("Tracking status: " + config.getTrackingStatusFinished());			
-
-			//set queue table to status FEEDER_PREINGESTED
-			queueDao.updateStatus(config.getQueueStatusPreingested(), dbRow.get(DaoOracle.AMD_ID));
-			logger.info("Queue status: " + config.getQueueStatusPreingested());
 		}
 	}
 	

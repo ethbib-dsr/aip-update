@@ -1,15 +1,39 @@
-# AIP Update #
+# Submission DSpace #
 
+Application that delivers data from DSpace into Rosetta. New items will handled as ingests. Updates make use of the AIP (Archival Information Package) update webservice in Rosetta. A queue table holds all items that should either be inserted as new SIP into Rosetta or updated an existing IE in Rosetta. All relevant files are located on an SFTP storage location. A cleanup job will regularly remove all processed items from SFTP and remove all duplicate (full) updates.
 
-Application that updates AIP (Archival Information Package) in Rosetta. A queue table holds all entities that should either be inserted as new SIP into Rosetta or updated an existing IE in Rosetta. All relevant files are located on an SFTP storage location and will be moved appropriately.
+## Current Version 1.2 ##
 
-## Current Version 1.1.1 ##
+## TODO
+
+* Javadoc
+* create release for github
 
 ## History ##
 
+### version 1.2 ###
+
+* application renamed from 'aip-update' to 'submissionDs' to properly show what the application is for
+* remove all duplicate 'FEEDER_UPDATED' with the same SIP_NAME from SFTP
+* add timestamp update for every queue update
+
+### version 1.1.5 ###
+* DDE-415, unique constraint processing when ingesting new items
+
+### version 1.1.4 ###
+* DDE-605, file extension is read again, but a warning is thrown (no exception), if a file has no extension
+
+### version 1.1.3 ###
+* DDE-605, file extension extract removed
+* classpath fixed
+
+### version 1.1.2 ###
+* added waiting timer after each update
+* extented properties by control.update.waiting
+
 ### version 1.1.1 ###
 * added REJECTED handling
-* implemented error log for error-less errors 
+* implemented error log for error-less errors
 
 ### version 1.1 ###
 * implementation deleted items

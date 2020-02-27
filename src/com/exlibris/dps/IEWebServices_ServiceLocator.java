@@ -6,7 +6,7 @@
  */
 package com.exlibris.dps;
 
-import com.ethz.aipupdate.AipUpdateSingleton;
+import com.ethz.submissionds.SubmissionDsSingleton;
 
 public class IEWebServices_ServiceLocator extends org.apache.axis.client.Service implements com.exlibris.dps.IEWebServices_Service {
 
@@ -43,7 +43,7 @@ public class IEWebServices_ServiceLocator extends org.apache.axis.client.Service
     public com.exlibris.dps.IEWebServices_PortType getIEWebServicesPort() throws javax.xml.rpc.ServiceException {
        java.net.URL endpoint;
         try {
-            endpoint = new java.net.URL(AipUpdateSingleton.wsLocation);
+            endpoint = new java.net.URL(SubmissionDsSingleton.wsLocation);
         }
         catch (java.net.MalformedURLException e) {
             throw new javax.xml.rpc.ServiceException(e);

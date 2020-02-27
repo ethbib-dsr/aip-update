@@ -1,4 +1,4 @@
-package com.ethz.aipupdate.beans;
+package com.ethz.submissionds.beans;
 
 public class DcMetaDataBean
 {

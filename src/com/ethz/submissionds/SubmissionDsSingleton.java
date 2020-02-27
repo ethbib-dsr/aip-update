@@ -1,11 +1,11 @@
-package com.ethz.aipupdate;
+package com.ethz.submissionds;
 
-import com.ethz.aipupdate.businesslogic.IngestDomain;
-import com.ethz.aipupdate.businesslogic.PostAipUpdateDomain;
-import com.ethz.aipupdate.businesslogic.AipUpdateDomain;
-import com.ethz.aipupdate.businesslogic.DeleteDomain;
-import com.ethz.aipupdate.businesslogic.FileSystemCleanupDomain;
-import com.ethz.aipupdate.helper.ConfigProperties;
+import com.ethz.submissionds.businesslogic.AipUpdateDomain;
+import com.ethz.submissionds.businesslogic.CleanupUpdateDuplicatesDomain;
+import com.ethz.submissionds.businesslogic.FileSystemCleanupDomain;
+import com.ethz.submissionds.businesslogic.IngestDomain;
+import com.ethz.submissionds.businesslogic.PostAipUpdateDomain;
+import com.ethz.submissionds.helper.ConfigProperties;
 
 /**
  * AIP update Singleton
@@ -23,27 +23,27 @@ import com.ethz.aipupdate.helper.ConfigProperties;
  *
  */
 
-public class AipUpdateSingleton
+public class SubmissionDsSingleton
 {
 
-	private static AipUpdateSingleton instance = null;
+	private static SubmissionDsSingleton instance = null;
 	private static ConfigProperties config;
 	public static String wsLocation;
 
-	private AipUpdateSingleton()
+	private SubmissionDsSingleton()
 	{
 		// defeat instantiation
 	}
 
-	public static AipUpdateSingleton getInstance(String configPath)
+	public static SubmissionDsSingleton getInstance(String configPath)
 	{
 		if (instance == null)
 		{
-			synchronized (AipUpdateSingleton.class)
+			synchronized (SubmissionDsSingleton.class)
 			{
 				if (instance == null)
 				{
-					instance = new AipUpdateSingleton();
+					instance = new SubmissionDsSingleton();
 					config = new ConfigProperties(configPath);
 					wsLocation = config.getWebserviceUrl();
 				}
@@ -68,6 +68,13 @@ public class AipUpdateSingleton
 		{
 			PostAipUpdateDomain domainPostUpdate = new PostAipUpdateDomain(config);
 			domainPostUpdate.run();
+		}
+
+		//duplicate FEEDER_UPDATED cleanup
+		if(Integer.parseInt(config.getQueueCleanupUpdates()) > 0)
+		{
+			CleanupUpdateDuplicatesDomain dupCleanup = new CleanupUpdateDuplicatesDomain(config);	
+			dupCleanup.run();
 		}
 		
 		//sip-status: FEEDER_UPDATED

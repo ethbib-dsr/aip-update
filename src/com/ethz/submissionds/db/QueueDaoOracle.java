@@ -1,14 +1,16 @@
-package com.ethz.aipupdate.db;
+package com.ethz.submissionds.db;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
-import com.ethz.aipupdate.helper.ConfigProperties;
+import com.ethz.submissionds.helper.ConfigProperties;
 
 
 /**
@@ -298,13 +300,124 @@ public class QueueDaoOracle extends DaoOracle
 			System.exit(1);
 		}
 		
-		
 		closeConnection();
 		
 		return currentQueue;
-		
 	}
 	
+	
+	/**
+	 * Returns a HashMap containing SIP_NAMEs that have more than one item
+	 * with 'FEEDER_UPDATED' status
+	 * 
+	 * @return HashMap<String, Integer>
+	 */
+	public Map<String, Integer> getDuplicateUpdatesSameSipname()
+	{
+		Map<String, Integer> dbRows = new HashMap<String, Integer>();
+		
+		PreparedStatement stmt;
+		ResultSet rs = null;
+
+		String count_variable = "amount";
+
+		setupConnection();	
+		
+		try
+		{
+			stmt = conn.prepareStatement(buildSelectDuplicateUpdatesQuery(count_variable));
+			
+			rs = stmt.executeQuery();
+			
+			while(rs.next())
+			{
+				dbRows.put(rs.getString(DaoOracle.SIP_NAME), rs.getInt(count_variable));
+			}			
+		}
+		catch (SQLException e)
+		{
+			logger.fatal(e.getMessage());
+			System.exit(1);
+		}
+		
+		closeConnection();
+		
+		return dbRows;
+	}
+	
+	
+	/**
+	 * Queries the tracking table INGEST_TRACKING_RECORD_E_PUB_Q for possible duplicates.
+	 * This can happen, when the SIP_STATUS for an update action is set to FEEDER_SUBMITTED
+	 * instead of FEEDER_UPDATED. With FEEDER_SUBMITTED, the update logic wants to create a new
+	 * item, instead of an update.
+	 * See https://dinkum.ethbib.ethz.ch/pages/viewpage.action?pageId=58819828
+	 * The results are used to fill an ArrayList. Each entry in the ArrayList
+	 * * is an WORKFLOW_EXECUTION_ID with duplicate potential.
+	 *
+	 * @return List<String>
+	 */
+	public List<String> getUniqueConstraintIDs()
+	{
+		List<String> dbRows = new ArrayList<String>();
+		PreparedStatement stmt;
+		ResultSet rs = null;
+		
+		setupConnection();
+		try
+		{
+			stmt = conn.prepareStatement(buildSelectUniqueConstraintIDs());
+			rs = stmt.executeQuery();
+			
+			while(rs.next())
+			{
+				dbRows.add(rs.getString(DaoOracle.WORKFLOW_EXECUTION_ID));
+			}
+		}
+		catch (SQLException e)
+		{
+			logger.fatal(e.getMessage());
+			System.exit(1);
+		}
+		closeConnection();
+		
+		return dbRows;
+	}
+	
+	
+	
+	
+	
+	
+	public Set<String> getAmdIdsOfDuplicates(String sipName, String sipStatus)
+	{
+		Set<String> dbRows = new HashSet<String>();
+		
+		PreparedStatement stmt;
+		ResultSet rs = null;
+		
+		//logger.debug(buildAmdIdsFromDuplicates(sipName, sipStatus));
+		
+		setupConnection();
+		try
+		{
+			stmt = conn.prepareStatement(buildAmdIdsOfDuplicates(sipName, sipStatus));
+			rs = stmt.executeQuery();
+			
+			while(rs.next())
+			{
+				dbRows.add(rs.getString(DaoOracle.AMD_ID));
+			}
+		}
+		catch (SQLException e)
+		{
+			logger.fatal(e.getMessage());
+			System.exit(1);
+		}
+		closeConnection();				
+		
+		return dbRows;
+	}
 	
 	
 	/**
@@ -418,7 +531,7 @@ public class QueueDaoOracle extends DaoOracle
 	
 	/**
 	 * Returns the count of item in queue with the same sip-id that do not
-	 * have the status supplied in http://wfsoc.larshaendler.com/?percent=10
+	 * have the status supplied 
 	 * 
 	 * @param sipId
 	 * @param notStatusArrayList
@@ -450,6 +563,120 @@ public class QueueDaoOracle extends DaoOracle
 		
 		return resultCount;
 	}
+	
+	
+	
+	
+	private String buildAmdIdsOfDuplicates(String sipName, String sipStatus)
+	{
+		StringBuilder sb = new StringBuilder(450);
+		
+		/*
+		select
+		AMD_ID, SUBMIT_TIMESTAMP, SIP_NAME
+		from
+		INGEST_TRACKING_RECORD_E_PUB_Q
+		where
+		SIP_NAME = 'ReColl-107185' and 
+		SIP_STATUS = 'FEEDER_UPDATED' and 
+		SUBMIT_TIMESTAMP != (
+			Select 
+				MAX(SUBMIT_TIMESTAMP) 
+			from 
+				INGEST_TRACKING_RECORD_E_PUB_Q 
+			where SIP_NAME = 'ReColl-107185' and 
+				SIP_STATUS = 'FEEDER_UPDATED')
+		ORDER BY SUBMIT_TIMESTAMP ASC
+		 */
+		
+		sb.append("select ");
+		sb.append(DaoOracle.AMD_ID);
+		sb.append(" from ");
+		sb.append(DaoOracle.QUEUE_TABLE);
+		sb.append(" where ");
+		sb.append(DaoOracle.SIP_NAME + "='" + sipName + "'");
+		sb.append(" and " + DaoOracle.SIP_STATUS + "='" + sipStatus + "'");
+		sb.append(" and " + DaoOracle.SUBMIT_TIMESTAMP + " != (");
+		
+		sb.append("select ");
+		sb.append("MAX(" + DaoOracle.SUBMIT_TIMESTAMP + ") ");
+		sb.append("from " + DaoOracle.QUEUE_TABLE);
+		sb.append(" where ");
+		sb.append(DaoOracle.SIP_NAME + "='" + sipName + "'");
+		sb.append(" and " + DaoOracle.SIP_STATUS + "='" + sipStatus + "'");
+
+		sb.append(")");
+		sb.append(" order by " + DaoOracle.SUBMIT_TIMESTAMP + " ASC");
+		
+		
+		return sb.toString();
+	}
+	
+	
+	
+	/**
+	 * SQL builder for a query that returns WORKFLOW_EXECUTION_IDs that would result in an
+	 * Oracle unique constraint error, because of a wrong SIP_STATUS.
+	 * See https://dinkum.ethbib.ethz.ch/pages/viewpage.action?pageId=58819828
+	 * 
+	 * @return String
+	 */
+	private String buildSelectUniqueConstraintIDs()
+	{
+		StringBuilder sb = new StringBuilder(250);
+		
+		// See Dinkum entry "Unique Constraint error in Research Collection
+		// https://dinkum.ethbib.ethz.ch/pages/viewpage.action?pageId=58819828
+		
+		// SELECT WORKFLOW_EXECUTION_ID, COUNT(*) FROM INGEST_TRACKING_RECORD_E_PUB_Q 
+		// WHERE SIP_STATUS = 'FEEDER_SUBMITTED' 
+		// OR SIP_STATUS = 'FINISHED' 
+		// OR SIP_STATUS = 'FEEDER_PREINGESTED' 
+		// GROUP BY WORKFLOW_EXECUTION_ID HAVING COUNT(*) > 1
+		
+		sb.append("select ");
+		sb.append(DaoOracle.WORKFLOW_EXECUTION_ID + ", ");
+		sb.append("count(*) ");
+		
+		sb.append(" from ");
+		sb.append(DaoOracle.QUEUE_TABLE);
+		
+		sb.append(" where ");
+		sb.append(DaoOracle.SIP_STATUS + " = '"+config.getQueueStatusNew()+"'");
+		sb.append(" or ");
+		sb.append(DaoOracle.SIP_STATUS + " = '"+config.getTrackingIeFished()+"'");
+		sb.append(" or ");
+		sb.append(DaoOracle.SIP_STATUS + " = '"+config.getQueueStatusPreingested()+"'");		
+		sb.append("GROUP BY WORKFLOW_EXECUTION_ID HAVING COUNT(*) > 1");		
+
+		return sb.toString();
+	}
+	
+	
+	/**
+	 * SQL builder for a query that returns all SIP_NAMEs that have more
+	 * than one FEEDER_UPDATED status
+	 * 
+	 * @param countName
+	 * @return String
+	 */
+	private String buildSelectDuplicateUpdatesQuery(String countName)
+	{
+		StringBuilder sb = new StringBuilder(250);
+		
+		sb.append("select ");
+		sb.append(DaoOracle.SIP_NAME + ", ");
+		sb.append("count(*) as " + countName);
+		sb.append(" from ");
+		sb.append(DaoOracle.QUEUE_TABLE);
+		sb.append(" where SIP_STATUS = '" + config.getQueueStatusUpdate() + "'");
+		sb.append(" group by " + DaoOracle.SIP_NAME + " ");
+		sb.append("having count(*) > 1");
+		sb.append(" order by " +  DaoOracle.SIP_NAME + " asc");
+		//sb.append(" fetch first " + rows + " rows only");
+
+		return sb.toString();
+	}	
 	
 	
 	/**
@@ -496,6 +723,7 @@ public class QueueDaoOracle extends DaoOracle
 		sb.append(" set ");
 		sb.append(DaoOracle.ENTITY_ID);
 		sb.append("='" + entityId + "'");
+		sb.append(", " + new HelperDaoOracle(config).buildDateUpdateSqlSnippet(DaoOracle.UPDATE_DT));
 		sb.append(" where ");
 		sb.append(DaoOracle.AMD_ID + " = '" + amdid + "'");
 				
@@ -520,6 +748,7 @@ public class QueueDaoOracle extends DaoOracle
 		sb.append(" set ");
 		sb.append(DaoOracle.SIP_ID);
 		sb.append("='" + ripId + "'");
+		sb.append(", " + new HelperDaoOracle(config).buildDateUpdateSqlSnippet(DaoOracle.UPDATE_DT));
 		sb.append(" where ");
 		sb.append(DaoOracle.AMD_ID + " = '" + amdid + "'");
 		
@@ -545,6 +774,7 @@ public class QueueDaoOracle extends DaoOracle
 		sb.append(" set ");
 		sb.append(DaoOracle.SIP_STATUS);
 		sb.append("='" + status + "'");
+		sb.append(", " + new HelperDaoOracle(config).buildDateUpdateSqlSnippet(DaoOracle.UPDATE_DT));
 		sb.append(" where ");
 		sb.append(DaoOracle.AMD_ID + " = '" + amdId + "'");
 				
@@ -568,9 +798,7 @@ public class QueueDaoOracle extends DaoOracle
 		sb.append(" set ");
 		sb.append(DaoOracle.SIP_STATUS_FS);
 		sb.append("='" + status + "'");
-		sb.append(", ");
-		sb.append(DaoOracle.UPDATE_DT);
-		sb.append("=SYSDATE" );
+		sb.append(", " + new HelperDaoOracle(config).buildDateUpdateSqlSnippet(DaoOracle.UPDATE_DT));
 		sb.append(" where ");
 		sb.append(DaoOracle.AMD_ID + " = '" + amdId + "'");
 				

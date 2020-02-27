@@ -1,4 +1,4 @@
-package com.ethz.aipupdate.businesslogic;
+package com.ethz.submissionds.businesslogic;
 
 import java.io.File;
 import java.rmi.RemoteException;
@@ -6,21 +6,22 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.axis.AxisFault;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.ethz.aipupdate.beans.DcMetaDataBean;
-import com.ethz.aipupdate.beans.StreamBean;
-import com.ethz.aipupdate.db.DaoOracle;
-import com.ethz.aipupdate.db.QueueDaoOracle;
-import com.ethz.aipupdate.db.TrackingDaoOracle;
-import com.ethz.aipupdate.helper.ConfigProperties;
-import com.ethz.aipupdate.helper.DataHelper;
-import com.ethz.aipupdate.helper.FileOperations;
-import com.ethz.aipupdate.helper.MetsParser;
-import com.ethz.aipupdate.helper.PdsConnector;
+import com.ethz.submissionds.beans.DcMetaDataBean;
+import com.ethz.submissionds.beans.StreamBean;
+import com.ethz.submissionds.db.DaoOracle;
+import com.ethz.submissionds.db.QueueDaoOracle;
+import com.ethz.submissionds.db.TrackingDaoOracle;
+import com.ethz.submissionds.helper.ConfigProperties;
+import com.ethz.submissionds.helper.DataHelper;
+import com.ethz.submissionds.helper.FileOperations;
+import com.ethz.submissionds.helper.MetsParser;
+import com.ethz.submissionds.helper.PdsConnector;
 import com.exlibris.dps.IEWebServicesProxy;
 import com.exlibris.dps.MetaData;
 
@@ -122,13 +123,15 @@ public class PostAipUpdateDomain
 				
 				logger.debug("start ie md update");
 				
-				//ie dc update
+				//ie dc update with some waiting afterward
 				updateIeDc(iePid, dbRow);
-
+				DataHelper.applicationSleep(config.getControlUpdateWaiting());
+				
 				logger.debug("start file md update");
 				
-				//ie file update
+				//ie file update with some waiting afterwards
 				updateFileDc(dbRow);
+				DataHelper.applicationSleep(config.getControlUpdateWaiting());
 				
 				//set status to AIP_FINISHED in queue
 				queueDao.updateStatus(config.getQueueStatusFinishedAip(), dbRow.get(DaoOracle.AMD_ID));
@@ -478,6 +481,9 @@ public class PostAipUpdateDomain
 		
 		//get Metadata beans
 		List<DcMetaDataBean> dcBeanList = parser.getIeDcMetaData();
+		
+		//temp
+		logger.debug(dcBeanList);
 		
 		StringBuilder sb = new StringBuilder(2000);
 		sb.append(System.getProperty("line.separator"));

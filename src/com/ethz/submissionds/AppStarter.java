@@ -1,4 +1,4 @@
-package com.ethz.aipupdate;
+package com.ethz.submissionds;
 
 import java.io.File;
 import java.io.IOException;
@@ -63,7 +63,7 @@ public class AppStarter {
 			
 			if(new File(confPath).exists())
 			{
-				final AipUpdateSingleton app = AipUpdateSingleton.getInstance(confPath);
+				final SubmissionDsSingleton app = SubmissionDsSingleton.getInstance(confPath);
 				logger.debug("AipUpdateSingleton created");
 				app.init();
 			}

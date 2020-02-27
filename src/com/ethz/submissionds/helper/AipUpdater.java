@@ -1,4 +1,4 @@
-package com.ethz.aipupdate.helper;
+package com.ethz.submissionds.helper;
 
 import java.rmi.RemoteException;
 import java.util.ArrayList;
@@ -10,9 +10,9 @@ import org.apache.axis.AxisFault;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.ethz.aipupdate.beans.StreamBean;
-import com.ethz.aipupdate.businesslogic.AipUpdateDomain;
-import com.ethz.aipupdate.db.QueueDaoOracle;
+import com.ethz.submissionds.beans.StreamBean;
+import com.ethz.submissionds.businesslogic.AipUpdateDomain;
+import com.ethz.submissionds.db.QueueDaoOracle;
 import com.exlibris.dps.Fixity;
 import com.exlibris.dps.IEWebServicesProxy;
 import com.exlibris.dps.Operation;

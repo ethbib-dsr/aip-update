@@ -924,6 +924,9 @@ public class IEWebServicesSoapBindingStub extends org.apache.axis.client.Stub im
                 java.lang.String key = (java.lang.String) keys.nextElement();
                 _call.setProperty(key, super.cachedProperties.get(key));
             }
+            //lars: manuell timeout of 20 minutes
+            //sorry for the hard-coded value :(
+            _call.setTimeout(1200000);
             // All the type mapping information is registered
             // when the first call is made.
             // The type mapping information is actually registered in

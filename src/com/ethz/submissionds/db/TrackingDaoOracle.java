@@ -1,11 +1,11 @@
-package com.ethz.aipupdate.db;
+package com.ethz.submissionds.db;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Map;
 
-import com.ethz.aipupdate.helper.ConfigProperties;
+import com.ethz.submissionds.helper.ConfigProperties;
 
 /**
  * Data Access Object for Oracle tracking table

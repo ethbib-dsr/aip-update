@@ -1,4 +1,4 @@
-package com.ethz.aipupdate.businesslogic;
+package com.ethz.submissionds.businesslogic;
 
 import java.rmi.RemoteException;
 import java.util.ArrayList;
@@ -8,11 +8,11 @@ import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.ethz.aipupdate.db.DaoOracle;
-import com.ethz.aipupdate.db.QueueDaoOracle;
-import com.ethz.aipupdate.db.TrackingDaoOracle;
-import com.ethz.aipupdate.helper.ConfigProperties;
-import com.ethz.aipupdate.helper.PdsConnector;
+import com.ethz.submissionds.db.DaoOracle;
+import com.ethz.submissionds.db.QueueDaoOracle;
+import com.ethz.submissionds.db.TrackingDaoOracle;
+import com.ethz.submissionds.helper.ConfigProperties;
+import com.ethz.submissionds.helper.PdsConnector;
 import com.exlibris.dps.IEWebServicesProxy;
 
 /**

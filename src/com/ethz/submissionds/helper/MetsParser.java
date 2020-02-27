@@ -1,4 +1,4 @@
-package com.ethz.aipupdate.helper;
+package com.ethz.submissionds.helper;
 
 import java.io.StringReader;
 import java.util.ArrayList;
@@ -21,8 +21,8 @@ import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 
-import com.ethz.aipupdate.beans.DcMetaDataBean;
-import com.ethz.aipupdate.beans.StreamBean;
+import com.ethz.submissionds.beans.DcMetaDataBean;
+import com.ethz.submissionds.beans.StreamBean;
 
 public class MetsParser
 {
@@ -172,9 +172,6 @@ public class MetsParser
 		return streamBean;
 	}	
 	
-	
-	
-	
 	private Set<StreamBean> getRosettaFilesFromDom(String xPath)
 	{
 		Set<StreamBean> returnSet = new HashSet<StreamBean>();
@@ -203,9 +200,8 @@ public class MetsParser
 		return returnSet;
 		
 	}			
-	
-	
-	private StreamBean getRosettaStreamBeanFromDom(String fileId)
+
+    private StreamBean getRosettaStreamBeanFromDom(String fileId)
 	{
 		
 		//MD5 value
@@ -221,13 +217,13 @@ public class MetsParser
 		//logger.debug("size: " + fileSize);
 		
 		//file extension 
-		String fileExt = extractNodeValueFromXPath(config.getXpathFileExtensions().replace(FILEID, fileId));
+		String fileExt = extractNodeValueFromXPathIfExists(config.getXpathFileExtensions().replace(FILEID, fileId), "metsparser.file.extension");
 		//logger.debug("extension: " + fileExt);
 		
 		StreamBean streamBean = new StreamBean(fileName, md5, fileExt, fileSize, fileId);
 		
 		return streamBean;
-	}
+	}	
 	
 	
 	public String getRosettaRepPidFromDom()
@@ -271,7 +267,19 @@ public class MetsParser
 		return nodeValue;
 	}
 	
-
+	private String extractNodeValueFromXPathIfExists(String xPathString, String propertyName)
+	{
+		String nodeValue = "";
+		try
+		{
+			nodeValue = extractNodeValueFromXPath(xPathString);
+		}
+		catch (NullPointerException e)
+		{
+			logger.warn(propertyName + " does not exist with path: "+ xPathString);
+		}
+		return nodeValue;
+	}
 	
 	private Document createDOM()
 	{
